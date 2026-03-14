@@ -1,0 +1,19 @@
+{
+  "name": "Git Submodules Update Dev",
+  "runArgs": ["--name", "devct-git-submodules-update"],
+  "image": "ghcr.io/itsapinhulk/devcontainer:latest",
+  "workspaceFolder": "/repo/git-submodules-update",
+  "remoteUser": "devuser",
+  "containerUser": "devuser",
+  // Ensures the container workspace folder is owned by your user
+  "updateRemoteUserUID": true,
+  // Shared claude code settings, and hidden jj directory
+  "mounts": [
+    "source=claude-code-config,target=/home/devuser/.claude,type=volume",
+     "type=volume,target=${containerWorkspaceFolder}/.jj",
+  ],
+  "containerEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/devuser/.claude",
+  },
+  "postStartCommand": ["sudo chown -R devuser:devuser /repo"],
+}
