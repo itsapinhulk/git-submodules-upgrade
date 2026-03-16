@@ -1,8 +1,8 @@
 {
   "name": "Git Submodules Update Dev",
-  "runArgs": ["--name", "devct-git-submodules-update", "--hostname", "devct-git-submodules-update"],
+  "runArgs": ["--hostname", "devct-git-submodules-update"],
   "image": "ghcr.io/itsapinhulk/devcontainer:latest",
-  "workspaceFolder": "/repo/git-submodules-update",
+  "workspaceFolder": "/repo/itsapinhulk/git-submodules-update",
   "workspaceMount": "source=${localWorkspaceFolder},target=${containerWorkspaceFolder},type=bind",
   "remoteUser": "devuser",
   "containerUser": "devuser",
@@ -11,7 +11,7 @@
   // Shared claude code settings, and hidden jj directory
   "mounts": [
     "source=claude-code-config,target=/home/devuser/.claude,type=volume",
-     "type=volume,target=${containerWorkspaceFolder}/.jj",
+    "type=volume,target=${containerWorkspaceFolder}/.jj",
   ],
   "containerEnv": {
     "CLAUDE_CONFIG_DIR": "/home/devuser/.claude",
