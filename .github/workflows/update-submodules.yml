@@ -1,6 +1,8 @@
 name: Update Submodules
 
 on:
+  push:
+  pull_request:
   schedule:
     - cron: '0 22 * * *' # Every day at 22:00 UTC
   workflow_dispatch:
