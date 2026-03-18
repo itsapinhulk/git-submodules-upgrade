@@ -1,4 +1,4 @@
-name: Update Git Submodules
+name: Git Submodules Update
 description: Updates all git submodules to their latest remote commit and optionally opens a PR.
 
 inputs:
