@@ -143,7 +143,7 @@ runs:
             'title': sys.argv[2],
             'head': sys.argv[3],
             'base': sys.argv[4],
-            'body': 'Automated submodule update by the update-git-submodules action.'
+            'body': 'Automated submodule update by the upgrade-git-submodules action.'
         }
         print(json.dumps(body))
         " "$REVIEWER" "$PR_TITLE" "$PR_BRANCH" "$BASE_BRANCH")
