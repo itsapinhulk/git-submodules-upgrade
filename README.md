@@ -1,11 +1,11 @@
-# git-submodules-update
+# git-submodules-upgrade
 
-A GitHub Action that updates all git submodules to their latest remote commits and optionally opens a pull request with the changes.
+A GitHub Action that upgrades all git submodules to their latest remote commits and optionally opens a pull request with the changes.
 
 ## Usage
 
 ```yaml
-- uses: your-org/git-submodules-update@v1
+- uses: itsapinhulk/git-submodules-upgrade@v1
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -13,7 +13,7 @@ A GitHub Action that updates all git submodules to their latest remote commits a
 ### Example workflow
 
 ```yaml
-name: Update Submodules
+name: Upgrade Submodules
 
 on:
   schedule:
@@ -21,7 +21,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  update:
+  upgrade:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +29,7 @@ jobs:
           submodules: recursive
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: your-org/git-submodules-update@v1
+      - uses: itsapinhulk/git-submodules-upgrade@v1
         with:
           create-pr: 'true'
           reviewer: octocat
@@ -41,16 +41,16 @@ jobs:
 |-------|-------------|----------|---------|
 | `target` | Path to the repository root containing submodules | No | `.` |
 | `create-pr` | Set to `false` to skip pull request creation | No | `true` |
-| `include` | Newline- or space-separated list of submodule paths to update. When set, only these submodules are updated (takes priority over `skip`) | No | `` |
+| `include` | Newline- or space-separated list of submodule paths to upgrade. When set, only these submodules are updated (takes priority over `skip`) | No | `` |
 | `skip` | Newline- or space-separated list of submodule paths to skip. Ignored when `include` is set | No | `` |
-| `pr-branch` | Branch name used for the update PR | No | `auto/update-submodules` |
+| `pr-branch` | Branch name used for the upgrade PR | No | `auto/upgrade-submodules` |
 | `pr-title` | Title of the pull request | No | `chore: update git submodules` |
-| `pr-commit-message` | Commit message for the submodule update commit | No | `chore: update git submodules` |
+| `pr-commit-message` | Commit message for the submodule update commit | No | `chore: upgrade git submodules` |
 | `reviewer` | GitHub username to request a review from | No | `` |
 
 ## Behavior
 
-1. Updates all submodules (or a filtered subset) to their latest remote commit.
+1. Upgrades all submodules (or a filtered subset) to their latest remote commit.
 2. Checks whether any submodule pointers changed.
 3. If changes exist and `create-pr` is `true`:
    - Creates (or force-pushes to) the `pr-branch` branch.
@@ -64,7 +64,7 @@ If `create-pr` is `false` and there are changes, the working tree is left dirty 
 Use `include` to update only specific submodules:
 
 ```yaml
-- uses: your-org/git-submodules-update@v1
+- uses: itsapinhulk/git-submodules-upgrade@v1
   with:
     include: |
       ext/foo
@@ -74,7 +74,7 @@ Use `include` to update only specific submodules:
 Use `skip` to exclude specific submodules:
 
 ```yaml
-- uses: your-org/git-submodules-update@v1
+- uses: itsapinhulk/git-submodules-upgrade@v1
   with:
     skip: ext/vendor
 ```

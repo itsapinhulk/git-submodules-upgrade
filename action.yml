@@ -1,5 +1,5 @@
-name: Git Submodules Update
-description: Updates all git submodules to their latest remote commit and optionally opens a PR.
+name: Git Submodules Upgrade
+description: Upgrades all git submodules to their latest remote commit and optionally opens a PR.
 
 inputs:
   target:
@@ -12,7 +12,7 @@ inputs:
     default: 'true'
   include:
     description: >
-      Newline- or space-separated list of submodule paths to update.
+      Newline- or space-separated list of submodule paths to upgrade.
       When set, only these submodules are updated (takes priority over skip).
     required: false
     default: ''
@@ -23,17 +23,17 @@ inputs:
     required: false
     default: ''
   pr-branch:
-    description: Branch name used for the update PR.
+    description: Branch name used for the upgrade PR.
     required: false
-    default: auto/update-submodules
+    default: auto/upgrade-submodules
   pr-title:
     description: Title of the pull request.
     required: false
-    default: 'chore: update git submodules'
+    default: 'chore: upgrade git submodules'
   pr-commit-message:
-    description: Commit message for the submodule update commit.
+    description: Commit message for the submodule upgrade commit.
     required: false
-    default: 'chore: update git submodules'
+    default: 'chore: upgrade git submodules'
   reviewer:
     description: GitHub username to request a review from (optional).
     required: false
@@ -68,7 +68,7 @@ runs:
           echo "list=$(to_colon "$skip")" >> "$GITHUB_OUTPUT"
         fi
 
-    - name: Update submodules
+    - name: Upgrade submodules
       shell: bash
       env:
         TARGET: ${{ inputs.target }}
@@ -120,7 +120,7 @@ runs:
       run: |
         cd "$TARGET"
 
-        # Switch to (or reset) the update branch
+        # Switch to (or reset) the upgrade branch
         git checkout -B "$PR_BRANCH"
         git add -A
         git commit -m "$COMMIT_MSG"
@@ -143,7 +143,7 @@ runs:
             'title': sys.argv[2],
             'head': sys.argv[3],
             'base': sys.argv[4],
-            'body': 'Automated submodule update by the upgrade-git-submodules action.'
+            'body': 'Automated submodule upgrade by the upgrade-git-submodules action.'
         }
         print(json.dumps(body))
         " "$REVIEWER" "$PR_TITLE" "$PR_BRANCH" "$BASE_BRANCH")
