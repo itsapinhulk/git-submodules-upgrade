@@ -38,6 +38,13 @@ inputs:
     description: GitHub username to request a review from (optional).
     required: false
     default: ''
+  token:
+    description: >
+      GitHub token used to create pull requests.
+      Defaults to github.token. Supply a PAT if your repository
+      does not allow GitHub Actions to create pull requests.
+    required: false
+    default: ${{ github.token }}
 
 runs:
   using: composite
@@ -117,7 +124,7 @@ runs:
       if: steps.changes.outputs.changed == 'true' && inputs.create-pr == 'true'
       shell: bash
       env:
-        GH_TOKEN: ${{ github.token }}
+        GH_TOKEN: ${{ inputs.token }}
         TARGET: ${{ inputs.target }}
         PR_BRANCH: ${{ inputs.pr-branch }}
         COMMIT_MSG: ${{ inputs.pr-commit-message }}
