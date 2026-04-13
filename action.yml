@@ -56,11 +56,11 @@ runs:
     - name: Checkout submodules
       shell: bash
       run: |
-        script="${{ github.action_path }}/ext/itsapinhulk/dotfiles/scripts/upgrade-git-submodules"
+        script="${{ github.action_path }}/ext/itsapinhulk/shellutils/bash/upgrade-git-submodules"
         if [[ ! -f "$script" ]]; then
           git -C "${{ github.action_path }}" submodule update --init --depth 1 2>/dev/null || \
-            git clone --depth 1 https://github.com/itsapinhulk/dotfiles.git \
-              "${{ github.action_path }}/ext/itsapinhulk/dotfiles"
+            git clone --depth 1 https://github.com/itsapinhulk/shellutils.git \
+              "${{ github.action_path }}/ext/itsapinhulk/shellutils"
         fi
 
     - name: Configure git
@@ -95,7 +95,7 @@ runs:
         TARGET: ${{ inputs.target }}
         MODE: ${{ steps.lists.outputs.mode }}
         LIST: ${{ steps.lists.outputs.list }}
-        SCRIPT: ${{ github.action_path }}/ext/itsapinhulk/dotfiles/scripts/upgrade-git-submodules
+        SCRIPT: ${{ github.action_path }}/ext/itsapinhulk/shellutils/bash/upgrade-git-submodules
       run: |
         if [[ "$MODE" == "include" ]]; then
           # Build a temporary skip list of every submodule NOT in include list

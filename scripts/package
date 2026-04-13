@@ -10,7 +10,7 @@ fi
 
 OUTPUT_DIR="$(realpath -m "$1")"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-SCRIPT_SRC="$REPO_ROOT/ext/itsapinhulk/dotfiles/scripts/upgrade-git-submodules"
+SCRIPT_SRC="$REPO_ROOT/ext/itsapinhulk/shellutils/bash/upgrade-git-submodules"
 
 if [[ ! -f "$SCRIPT_SRC" ]]; then
     echo "Error: script not found at $SCRIPT_SRC — ensure submodules are initialized." >&2
@@ -23,8 +23,8 @@ STAGING=$(mktemp -d)
 trap 'rm -rf "$STAGING"' EXIT
 
 cp "$REPO_ROOT/action.yml" "$STAGING/"
-mkdir -p "$STAGING/ext/itsapinhulk/dotfiles/scripts"
-cp "$SCRIPT_SRC" "$STAGING/ext/itsapinhulk/dotfiles/scripts/upgrade-git-submodules"
+mkdir -p "$STAGING/ext/itsapinhulk/shellutils/bash"
+cp "$SCRIPT_SRC" "$STAGING/ext/itsapinhulk/shellutils/bash/upgrade-git-submodules"
 
 ZIP="$OUTPUT_DIR/release.zip"
 (cd "$STAGING" && zip -r "$ZIP" .)
