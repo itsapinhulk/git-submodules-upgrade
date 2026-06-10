@@ -5,7 +5,7 @@ A GitHub Action that upgrades all git submodules to their latest remote commits 
 ## Usage
 
 ```yaml
-- uses: itsapinhulk/git-submodules-upgrade@v1
+- uses: itsapinhulk/git-submodules-upgrade@v2
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -29,7 +29,7 @@ jobs:
           submodules: recursive
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: itsapinhulk/git-submodules-upgrade@v1
+      - uses: itsapinhulk/git-submodules-upgrade@v2
         with:
           create-pr: 'true'
           reviewer: octocat
@@ -64,7 +64,7 @@ If `create-pr` is `false` and there are changes, the working tree is left dirty 
 Use `include` to update only specific submodules:
 
 ```yaml
-- uses: itsapinhulk/git-submodules-upgrade@v1
+- uses: itsapinhulk/git-submodules-upgrade@v2
   with:
     include: |
       ext/foo
@@ -74,7 +74,7 @@ Use `include` to update only specific submodules:
 Use `skip` to exclude specific submodules:
 
 ```yaml
-- uses: itsapinhulk/git-submodules-upgrade@v1
+- uses: itsapinhulk/git-submodules-upgrade@v2
   with:
     skip: ext/vendor
 ```
