@@ -41,3 +41,12 @@ jobs:
           gh release create "$TAG" dist/release.zip \
             --title "$TAG" \
             --generate-notes
+
+      - name: Move major tag
+        env:
+          TAG: ${{ steps.tag.outputs.name }}
+        run: |
+          git fetch --tags --force
+          MAJOR=$(echo "$TAG" | grep -oE '^v[0-9]+')
+          git tag -f "$MAJOR" "$TAG^{commit}"
+          git push origin "$MAJOR" --force
