@@ -1,0 +1,47 @@
+name: Update Vendored Script
+
+on:
+  schedule:
+    # 11am, 3pm, 8pm US Eastern (EDT, UTC-4); cron is fixed UTC (no DST shift).
+    - cron: '0 15 * * *'
+    - cron: '0 19 * * *'
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Vendor latest script from main
+        run: bash scripts/vendor-upgrade-script --branch main
+
+      - name: Open PR if the vendored script changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          if git diff --quiet -- scripts/upgrade-git-submodules; then
+            echo "Vendored script already up to date."
+            exit 0
+          fi
+          ref="$(sed -n 's/^# source-ref:[[:space:]]*//p' scripts/upgrade-git-submodules | head -n1)"
+          TARGET=. \
+          PR_BRANCH="auto/update-upgrade-script" \
+          COMMIT_MSG="chore: update vendored upgrade-git-submodules to ${ref:0:12}" \
+          PR_TITLE="chore: update vendored upgrade-git-submodules" \
+          BASE_BRANCH="${{ github.ref_name }}" \
+          REVIEWER="itsapinhulk" \
+          PR_BODY="Automated update of the vendored script from shellutils main (pinned to ${ref})." \
+            bash scripts/open-pr

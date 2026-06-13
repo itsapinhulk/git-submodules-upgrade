@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Package release artifacts into a zip file.
+# Package release artifacts (action.yml + the scripts the action runs) into a zip.
 # Usage: scripts/package <output-dir>
 set -euo pipefail
 
@@ -10,12 +10,16 @@ fi
 
 OUTPUT_DIR="$(realpath -m "$1")"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
-SCRIPT_SRC="$REPO_ROOT/ext/itsapinhulk/shellutils/bash/upgrade-git-submodules"
 
-if [[ ! -f "$SCRIPT_SRC" ]]; then
-    echo "Error: script not found at $SCRIPT_SRC — ensure submodules are initialized." >&2
-    exit 1
-fi
+# Scripts that action.yml invokes at runtime.
+RUNTIME_SCRIPTS=(upgrade-git-submodules run-upgrade open-pr)
+
+for s in "${RUNTIME_SCRIPTS[@]}"; do
+    if [[ ! -f "$REPO_ROOT/scripts/$s" ]]; then
+        echo "Error: scripts/$s not found — run scripts/vendor-upgrade-script and retry." >&2
+        exit 1
+    fi
+done
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -23,8 +27,10 @@ STAGING=$(mktemp -d)
 trap 'rm -rf "$STAGING"' EXIT
 
 cp "$REPO_ROOT/action.yml" "$STAGING/"
-mkdir -p "$STAGING/ext/itsapinhulk/shellutils/bash"
-cp "$SCRIPT_SRC" "$STAGING/ext/itsapinhulk/shellutils/bash/upgrade-git-submodules"
+mkdir -p "$STAGING/scripts"
+for s in "${RUNTIME_SCRIPTS[@]}"; do
+    cp "$REPO_ROOT/scripts/$s" "$STAGING/scripts/"
+done
 
 ZIP="$OUTPUT_DIR/release.zip"
 (cd "$STAGING" && zip -r "$ZIP" .)

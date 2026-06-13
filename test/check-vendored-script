@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Verify the vendored upgrade-git-submodules script still matches its upstream
+# source at the commit recorded in its header. Prints a diff and exits non-zero
+# when out of sync. Used by CI and the release/tag path.
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+DEST="${DEST:-$REPO_ROOT/scripts/upgrade-git-submodules}"
+
+[[ -f "$DEST" ]] || { echo "::error::vendored script missing: $DEST" >&2; exit 1; }
+
+hdr() { sed -n "s/^# $1:[[:space:]]*//p" "$DEST" | head -n 1; }
+repo="$(hdr source-repo)"
+path="$(hdr source-path)"
+ref="$(hdr source-ref)"
+[[ -n "$repo" && -n "$path" && -n "$ref" ]] || {
+    echo "::error::$DEST is missing vendoring headers (source-repo/source-path/source-ref)." >&2
+    exit 1
+}
+
+tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+url="https://raw.githubusercontent.com/${repo}/${ref}/${path}"
+curl -fsSL "$url" -o "$tmp/upstream"
+
+# Strip the injected header block; the remainder must equal upstream byte-for-byte.
+sed '/^# >>> vendored: do not edit/,/^# <<< vendored <<</d' "$DEST" > "$tmp/stripped"
+
+if diff -u "$tmp/upstream" "$tmp/stripped"; then
+    echo "OK: ${DEST#"$REPO_ROOT"/} is in sync with ${repo}@${ref}"
+else
+    echo "::error::${DEST#"$REPO_ROOT"/} is out of sync with ${repo}@${ref}. Regenerate with: scripts/vendor-upgrade-script ${ref}" >&2
+    exit 1
+fi

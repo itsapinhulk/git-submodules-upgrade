@@ -7,7 +7,7 @@ A GitHub Action that upgrades all git submodules to their latest remote commits 
 ```yaml
 - uses: itsapinhulk/git-submodules-upgrade@v2
   with:
-    github-token: ${{ secrets.GITHUB_TOKEN }}
+    token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### Example workflow
@@ -44,9 +44,10 @@ jobs:
 | `include` | Newline- or space-separated list of submodule paths to upgrade. When set, only these submodules are updated (takes priority over `skip`) | No | `` |
 | `skip` | Newline- or space-separated list of submodule paths to skip. Ignored when `include` is set | No | `` |
 | `pr-branch` | Branch name used for the upgrade PR | No | `auto/upgrade-submodules` |
-| `pr-title` | Title of the pull request | No | `chore: update git submodules` |
+| `pr-title` | Title of the pull request | No | `chore: upgrade git submodules` |
 | `pr-commit-message` | Commit message for the submodule update commit | No | `chore: upgrade git submodules` |
 | `reviewer` | GitHub username to request a review from | No | `` |
+| `token` | GitHub token used to create pull requests. Supply a PAT if Actions are not allowed to open PRs | No | `${{ github.token }}` |
 
 ## Behavior
 
@@ -90,3 +91,7 @@ permissions:
   contents: write
   pull-requests: write
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how the upgrade script is vendored and kept in sync.

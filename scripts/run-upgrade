@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Run the vendored upgrade-git-submodules script, translating the action's
+# include/skip inputs into the variables the script understands.
+set -euo pipefail
+
+TARGET="${TARGET:-.}"
+INCLUDE="${INCLUDE:-}"
+SKIP="${SKIP:-}"
+SCRIPT="${SCRIPT:?SCRIPT must point at the vendored upgrade-git-submodules}"
+
+# Normalise newline/space separated lists into the colon-separated form the
+# script expects, collapsing runs so no empty entries leak through.
+to_colon() { tr ' \n' ':' <<<"$1" | tr -s ':' | sed 's/^://;s/:$//'; }
+
+if [[ -n "${INCLUDE//[[:space:]]/}" ]]; then
+    export GIT_SUBMODULES_UPGRADE_TARGET="$(to_colon "$INCLUDE")"
+else
+    export GIT_SUBMODULES_UPGRADE_SKIP="$(to_colon "$SKIP")"
+fi
+
+exec bash "$SCRIPT" "$TARGET"

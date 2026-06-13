@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Commit the submodule changes onto the PR branch and open (or update) a pull
+# request via the GitHub CLI (gh). Expects GH_TOKEN in the environment.
+set -euo pipefail
+
+TARGET="${TARGET:-.}"
+PR_BRANCH="${PR_BRANCH:?PR_BRANCH is required}"
+COMMIT_MSG="${COMMIT_MSG:?COMMIT_MSG is required}"
+PR_TITLE="${PR_TITLE:?PR_TITLE is required}"
+BASE_BRANCH="${BASE_BRANCH:?BASE_BRANCH is required}"
+REPO="${REPO:?REPO is required}"
+REVIEWER="${REVIEWER:-}"
+PR_BODY="${PR_BODY:-Automated submodule upgrade by the git-submodules-upgrade action.}"
+GH_TOKEN="${GH_TOKEN:?GH_TOKEN is required}"
+
+cd "$TARGET"
+
+# Switch to (or reset) the upgrade branch
+git checkout -B "$PR_BRANCH"
+git add -A
+git commit -m "$COMMIT_MSG"
+git push origin "$PR_BRANCH" --force
+
+# Reuse an open PR for this branch if one already exists.
+existing="$(gh pr list --repo "$REPO" --head "$PR_BRANCH" --state open --json number --jq '.[0].number // empty')"
+if [[ -n "$existing" ]]; then
+  echo "PR #$existing already exists — pushed updated commits."
+  exit 0
+fi
+
+pr_url="$(gh pr create --repo "$REPO" \
+  --head "$PR_BRANCH" \
+  --base "$BASE_BRANCH" \
+  --title "$PR_TITLE" \
+  --body "$PR_BODY")"
+echo "PR created: $pr_url"
+
+# Request reviewer if specified (don't fail the run if it can't be assigned).
+if [[ -n "$REVIEWER" ]]; then
+  gh pr edit "$PR_BRANCH" --repo "$REPO" --add-reviewer "$REVIEWER" || true
+fi

@@ -18,5 +18,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: Verify vendored script is in sync
+        run: bash test/check-vendored-script
+
       - name: Tag and push
         run: bash scripts/release -y

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Vendor the upgrade-git-submodules script from itsapinhulk/shellutils into this
+# repository, pinned to a specific commit. The source provenance is recorded in
+# the vendored file's header so it can be verified later (test/check-vendored-script).
+#
+# Usage:
+#   scripts/vendor-upgrade-script <commit-sha>      # pin to an exact commit
+#   scripts/vendor-upgrade-script --branch [name]   # resolve a branch (default: main) to its commit
+set -euo pipefail
+
+SOURCE_REPO="${SOURCE_REPO:-itsapinhulk/shellutils}"
+SOURCE_PATH="${SOURCE_PATH:-bash/upgrade-git-submodules}"
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+DEST="${DEST:-$REPO_ROOT/scripts/upgrade-git-submodules}"
+
+usage() { echo "Usage: $0 <commit-sha> | --branch [name]" >&2; exit 1; }
+
+case "${1:-}" in
+    --branch)
+        branch="${2:-main}"
+        echo "Resolving ${SOURCE_REPO}@${branch} ..." >&2
+        ref="$(git ls-remote "https://github.com/${SOURCE_REPO}.git" "refs/heads/${branch}" | cut -f1)"
+        [[ -n "$ref" ]] || { echo "Error: could not resolve branch '${branch}' in ${SOURCE_REPO}." >&2; exit 1; }
+        ;;
+    "" | -h | --help) usage ;;
+    *) ref="$1" ;;
+esac
+
+tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+url="https://raw.githubusercontent.com/${SOURCE_REPO}/${ref}/${SOURCE_PATH}"
+echo "Fetching ${url} ..." >&2
+curl -fsSL "$url" -o "$tmp/upstream"
+
+# Inject the provenance header right after the shebang so the script still runs.
+{
+    head -n 1 "$tmp/upstream"
+    echo "# >>> vendored: do not edit (regenerate with scripts/vendor-upgrade-script) >>>"
+    echo "# source-repo: ${SOURCE_REPO}"
+    echo "# source-path: ${SOURCE_PATH}"
+    echo "# source-ref:  ${ref}"
+    echo "# <<< vendored <<<"
+    tail -n +2 "$tmp/upstream"
+} > "$DEST"
+chmod +x "$DEST"
+
+echo "Vendored ${SOURCE_REPO}/${SOURCE_PATH}@${ref} -> ${DEST#"$REPO_ROOT"/}" >&2

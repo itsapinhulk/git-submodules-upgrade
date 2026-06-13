@@ -53,68 +53,20 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Checkout submodules
-      shell: bash
-      run: |
-        script="${{ github.action_path }}/ext/itsapinhulk/shellutils/bash/upgrade-git-submodules"
-        if [[ ! -f "$script" ]]; then
-          git -C "${{ github.action_path }}" submodule update --init --depth 1 2>/dev/null || \
-            git clone --depth 1 https://github.com/itsapinhulk/shellutils.git \
-              "${{ github.action_path }}/ext/itsapinhulk/shellutils"
-        fi
-
     - name: Configure git
       shell: bash
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
 
-    - name: Build skip list
-      id: lists
-      shell: bash
-      run: |
-        include="${{ inputs.include }}"
-        skip="${{ inputs.skip }}"
-
-        # Normalise: newlines → colons (the format the script expects)
-        to_colon() {
-          echo "$1" | tr '\n' ':' | tr ' ' ':' | sed 's/::/:/g' | sed 's/^://;s/:$//'
-        }
-
-        if [[ -n "$include" ]]; then
-          echo "mode=include" >> "$GITHUB_OUTPUT"
-          echo "list=$(to_colon "$include")" >> "$GITHUB_OUTPUT"
-        else
-          echo "mode=skip" >> "$GITHUB_OUTPUT"
-          echo "list=$(to_colon "$skip")" >> "$GITHUB_OUTPUT"
-        fi
-
     - name: Upgrade submodules
       shell: bash
       env:
         TARGET: ${{ inputs.target }}
-        MODE: ${{ steps.lists.outputs.mode }}
-        LIST: ${{ steps.lists.outputs.list }}
-        SCRIPT: ${{ github.action_path }}/ext/itsapinhulk/shellutils/bash/upgrade-git-submodules
-      run: |
-        if [[ "$MODE" == "include" ]]; then
-          # Build a temporary skip list of every submodule NOT in include list
-          all_paths=$(git -C "$TARGET" submodule foreach --recursive --quiet 'echo "$displaypath"')
-          IFS=':' read -ra included <<< "$LIST"
-          skip_list=""
-          while IFS= read -r path; do
-            found=false
-            for inc in "${included[@]}"; do
-              [[ "$path" == "$inc" ]] && found=true && break
-            done
-            $found || skip_list="${skip_list}:${path}"
-          done <<< "$all_paths"
-          export UPGRADE_GIT_SUBMODULES_SKIP="${skip_list#:}"
-        else
-          export UPGRADE_GIT_SUBMODULES_SKIP="$LIST"
-        fi
-
-        bash "$SCRIPT" "$TARGET"
+        INCLUDE: ${{ inputs.include }}
+        SKIP: ${{ inputs.skip }}
+        SCRIPT: ${{ github.action_path }}/scripts/upgrade-git-submodules
+      run: bash "${{ github.action_path }}/scripts/run-upgrade"
 
     - name: Check for changes
       id: changes
@@ -138,55 +90,4 @@ runs:
         REVIEWER: ${{ inputs.reviewer }}
         BASE_BRANCH: ${{ github.ref_name }}
         REPO: ${{ github.repository }}
-      run: |
-        cd "$TARGET"
-
-        # Switch to (or reset) the upgrade branch
-        git checkout -B "$PR_BRANCH"
-        git add -A
-        git commit -m "$COMMIT_MSG"
-        git push origin "$PR_BRANCH" --force
-
-        # Check if a PR already exists for this branch
-        existing=$(curl -sf \
-          -H "Authorization: Bearer $GH_TOKEN" \
-          -H "Accept: application/vnd.github+json" \
-          "https://api.github.com/repos/${REPO}/pulls?head=${REPO%/*}:${PR_BRANCH}&state=open" \
-          | python3 -c "import sys,json; prs=json.load(sys.stdin); print(prs[0]['number'] if prs else '')" 2>/dev/null || true)
-
-        if [[ -n "$existing" ]]; then
-          echo "PR #$existing already exists — pushed updated commits."
-        else
-          body_json=$(python3 -c "
-        import json, sys
-        reviewer = sys.argv[1]
-        body = {
-            'title': sys.argv[2],
-            'head': sys.argv[3],
-            'base': sys.argv[4],
-            'body': 'Automated submodule upgrade by the upgrade-git-submodules action.'
-        }
-        print(json.dumps(body))
-        " "$REVIEWER" "$PR_TITLE" "$PR_BRANCH" "$BASE_BRANCH")
-
-          pr_url=$(curl -s \
-            -X POST \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${REPO}/pulls" \
-            -d "$body_json" \
-            | python3 -c "import sys,json; d=json.load(sys.stdin); sys.exit(print('Error: '+d.get('message',str(d)),file=sys.stderr) or 1) if 'html_url' not in d else print(d['html_url'])")
-
-          echo "PR created: $pr_url"
-
-          # Request reviewer if specified
-          if [[ -n "$REVIEWER" ]]; then
-            pr_number=$(echo "$pr_url" | grep -oE '[0-9]+$')
-            curl -sf \
-              -X POST \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/${REPO}/pulls/${pr_number}/requested_reviewers" \
-              -d "{\"reviewers\":[\"$REVIEWER\"]}" > /dev/null || true
-          fi
-        fi
+      run: bash "${{ github.action_path }}/scripts/open-pr"
