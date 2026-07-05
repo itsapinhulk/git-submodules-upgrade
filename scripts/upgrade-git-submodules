@@ -2,7 +2,7 @@
 # >>> vendored: do not edit (regenerate with scripts/vendor-upgrade-script) >>>
 # source-repo: itsapinhulk/shellutils
 # source-path: bash/upgrade-git-submodules
-# source-ref:  1bcba7db5c88a8effe3fa5443aad8e8bfcd5ccbd
+# source-ref:  73d1591be48ed6d8637af8d51be2d8acdda078f0
 # <<< vendored <<<
 # Pull the latest commit for every submodule.
 set -euo pipefail
